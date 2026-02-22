@@ -1,0 +1,28 @@
+name: Sync Telegram WebApp JS
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download latest file
+        run: curl -sS https://telegram.org/js/telegram-web-app.js -o telegram-web-app.js.new
+
+      - name: Compare and update if changed
+        run: |
+          if ! cmp -s telegram-web-app.js telegram-web-app.js.new; then
+            mv telegram-web-app.js.new telegram-web-app.js
+            git config user.name "sync-bot"
+            git config user.email "sync@users.noreply.github.com"
+            git add telegram-web-app.js
+            git commit -m "auto: sync telegram-web-app.js"
+            git push
+          else
+            echo "No changes"
+          fi
